@@ -17,7 +17,9 @@
 */
 
 using System;
+using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -74,9 +76,14 @@ namespace SoundCloud.NET
 
         #endregion Constructors
 
-        public SoundCloudAccessToken Authenticate()
+        public async Task<SoundCloudAccessToken> Authenticate()
         {
-            SoundCloudAccessToken token = SoundCloudApi.ApiAction<SoundCloudAccessToken>(ApiCommand.UserCredentialsFlow, HttpMethod.Post, Credentials.ClientID, Credentials.ClientSecret, Credentials.UserName, Credentials.Password);
+            SoundCloudAccessToken token = await SoundCloudApi.ApiAction<SoundCloudAccessToken>(ApiCommand.UserCredentialsFlow,
+                                                                                               HttpMethod.Post,
+                                                                                               Credentials.ClientID,
+                                                                                               Credentials.ClientSecret,
+                                                                                               Credentials.UserName,
+                                                                                               Credentials.Password);
 
             SoundCloudAccessToken = token;
 

@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -111,7 +114,7 @@ namespace SoundCloud.NET
         /// 
         /// <param name="command">Api command.</param>
         /// <param name="parameters">Parameters format of an api command uri.</param>
-        public static T ApiAction<T>(ApiCommand command, params object[] parameters)
+        public static Task<T> ApiAction<T>(ApiCommand command, params object[] parameters)
         {
             var uri =
                 ApiDictionary[command]
@@ -128,7 +131,7 @@ namespace SoundCloud.NET
         /// <param name="command">Api command.</param>
         /// <param name="method">Http method. <seealso cref="HttpMethod"/>.</param>
         /// <param name="parameters">Parameters format of an api command uri.</param>
-        public static T ApiAction<T>(ApiCommand command, HttpMethod method, params object[] parameters)
+        public static Task<T> ApiAction<T>(ApiCommand command, HttpMethod method, params object[] parameters)
         {
             var uri =
                 ApiDictionary[command]
@@ -145,7 +148,7 @@ namespace SoundCloud.NET
         /// 
         /// <param name="command">Api command;</param>
         /// <param name="extraParameters">Dictionnary of parameters to be passed in the api action uri.</param>
-        public static T ApiAction<T>(ApiCommand command, Dictionary<string, object> extraParameters)
+        public static Task<T> ApiAction<T>(ApiCommand command, Dictionary<string, object> extraParameters)
         {
             var uri =
                 ApiDictionary[command]
@@ -164,7 +167,7 @@ namespace SoundCloud.NET
         /// <param name="method"></param>
         /// <param name="extraParameters"></param>
         /// <param name="parameters"></param>
-        public static T ApiAction<T>(ApiCommand command, HttpMethod method, Dictionary<string, object> extraParameters, params object[] parameters)
+        public static Task<T> ApiAction<T>(ApiCommand command, HttpMethod method, Dictionary<string, object> extraParameters, params object[] parameters)
         {
             var uri =
                 ApiDictionary[command]
@@ -182,7 +185,7 @@ namespace SoundCloud.NET
         /// <param name="method">Http method. <seealso cref="HttpMethod"/>.</param>
         /// <param name="requireAuthentication">The action requires an authentication or not.</param>
         /// <returns>An object returned back from the api action.</returns>
-        public static T ApiAction<T>(Uri uri, HttpMethod method = HttpMethod.Get, bool requireAuthentication = true)
+        public static async Task<T> ApiAction<T>(Uri uri, HttpMethod method = null, bool requireAuthentication = true)
         {
             Uri api = uri;
 
@@ -199,59 +202,67 @@ namespace SoundCloud.NET
                     api = uri.UriWithAuthorizedUri(SoundCloudAccessToken.AccessToken);
                 }
 
-            var request = WebRequest.Create(api);
+            var request = new HttpRequestMessage(method ?? HttpMethod.Get, api);
 
-            request.Method = method.ToString().ToUpperInvariant();
+            // TODO: Force returned type to JSON
+            //request.ContentType = "application/json";
+            //request.ContentLength = 0;
 
-            // Force returned type to JSON
-            request.ContentType = "application/json";
-            request.ContentLength = 0;
-            
             //add gzip enabled header
-            if (EnableGZip) request.Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip, deflate");
-            request.ContentLength = 0;
+            if (EnableGZip)
+            {
+                request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+                request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+            }
 
-            HttpWebResponse response = null;
+            // TODO: needed?
+            //request.ContentLength = 0;
+
+            HttpResponseMessage response = null;
 
             try
             {
                 //OnApiActionExecuting Event
                 OnApiActionExecuting(EventArgs.Empty);
 
-                response = (HttpWebResponse)request.GetResponse();
+                response = await new HttpClient().SendAsync(request);
 
                 if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
                 {
-                    var stream = response.GetResponseStream();
+                    var stream = await response.Content.ReadAsStreamAsync();
 
-                    //check for gzipped response and unzip it
                     try
                     {
-                        if (response.Headers[HttpResponseHeader.ContentEncoding].Equals("gzip") ||
-                            response.Headers[HttpResponseHeader.ContentEncoding].Equals("deflate"))
+                        //check for gzipped response and unzip it
+                        try
                         {
-                            stream = new GZipStream(stream, CompressionMode.Decompress);
+                            if (response.Content.Headers.ContentEncoding.Contains("gzip") ||
+                                response.Content.Headers.ContentEncoding.Contains("deflate"))
+                            {
+                                stream = new GZipStream(stream, CompressionMode.Decompress);
+                            }
                         }
+                        catch (Exception) {/* no ziped response found, return to normal */}
+
+
+                        string json;
+
+                        using (var reader = new StreamReader(stream))
+                        {
+                            json = reader.ReadToEnd();
+                        }
+
+                        var args = new SoundCloudEventArgs { RawResponse = json, ReturnedType = typeof(T) };
+
+                        //OnApiActionExecuted Event
+                        OnApiActionExecuted(args);
+
+                        return JsonSerializer.Deserialize<T>(json);
                     }
-                    catch (Exception) {/* no ziped response found, return to normal */}
-
-
-                    string json;
-
-                    using (var reader = new StreamReader(stream))
+                    finally
                     {
-                        json = reader.ReadToEnd();
+                        stream?.Dispose();
                     }
-
-                    //close stream
-                    stream.Close();
-
-                    var args = new SoundCloudEventArgs { RawResponse = json, ReturnedType = typeof(T) };
-
-                    //OnApiActionExecuted Event
-                    OnApiActionExecuted(args);
-
-                    return JsonSerializer.Deserialize<T>(json);
                 }
                 else if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.Unauthorized)
                 {
@@ -260,9 +271,9 @@ namespace SoundCloud.NET
                 }
             }
 
-            catch (SoundCloudException e)
+            catch (SoundCloudException)
             {
-                throw new SoundCloudException(string.Format("{0} : {1}", response.StatusCode, response.StatusDescription));
+                throw new SoundCloudException(string.Format("{0} : {1}", response.StatusCode, response.ReasonPhrase));
             }
 
             return default(T);

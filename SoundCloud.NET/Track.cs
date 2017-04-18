@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -33,7 +35,7 @@ namespace SoundCloud.NET
         #region Properties
 
         [DataMember(Name = "id")]
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         [DataMember(Name = "created_at")]
         private string _CreationDate;
@@ -45,10 +47,10 @@ namespace SoundCloud.NET
         }
 
         [DataMember(Name = "user_id")]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         [DataMember(Name = "duration")]
-        public int Duration { get; set; }
+        public int? Duration { get; set; }
 
         [DataMember(Name = "commentable")]
         public bool Commentable { get; set; }
@@ -144,7 +146,7 @@ namespace SoundCloud.NET
         public string DownloadUrl { get; set; }
 
         [DataMember(Name = "downloads_remaining")]
-        public int DownloadsRemaining { get; set; }
+        public int? DownloadsRemaining { get; set; }
 
         [DataMember(Name = "secret_token")]
         public string SecretToken { get; set; }
@@ -153,22 +155,22 @@ namespace SoundCloud.NET
         public string SecretUri { get; set; }
 
         [DataMember(Name = "user_playback_count")]
-        public int UserPlaybackCount { get; set; }
+        public int? UserPlaybackCount { get; set; }
 
         [DataMember(Name = "user_favorite")]
         public bool UserFavorite { get; set; }
 
         [DataMember(Name = "playback_count")]
-        public int PlaybackCount { get; set; }
+        public int? PlaybackCount { get; set; }
 
         [DataMember(Name = "download_count")]
-        public int DownloadCount { get; set; }
+        public int? DownloadCount { get; set; }
 
         [DataMember(Name = "favoritings_count")]
-        public int FavoritingsCount { get; set; }
+        public int? FavoritingsCount { get; set; }
 
         [DataMember(Name = "comment_count")]
-        public int CommentsCount { get; set; }
+        public int? CommentsCount { get; set; }
 
         [DataMember(Name = "attachments_uri")]
         public string AttachmentUri { get; set; }
@@ -180,7 +182,7 @@ namespace SoundCloud.NET
         /// <summary>
         ///   Returns a collection of tracks uploaded by logged-in user.
         /// </summary>
-        public static List<Track> MyTacks()
+        public static Task<List<Track>> MyTacks()
         {
             return SoundCloudApi.ApiAction<List<Track>>(ApiCommand.MeTracks);
         }
@@ -188,7 +190,7 @@ namespace SoundCloud.NET
         /// <summary>
         ///   Returns a collection of tracks.
         /// </summary>
-        public static List<Track> GetTracks()
+        public static Task<List<Track>> GetTracks()
         {
             return SoundCloudApi.ApiAction<List<Track>>(ApiCommand.Tracks);
         }
@@ -197,7 +199,7 @@ namespace SoundCloud.NET
         ///   Returns a track by track id.
         /// </summary>
         /// <param name="id"> Track id. </param>
-        public static Track GetTrack(int id)
+        public static Task<Track> GetTrack(int id)
         {
             return SoundCloudApi.ApiAction<Track>(ApiCommand.Track, id);
         }
@@ -219,7 +221,7 @@ namespace SoundCloud.NET
         /// <param name="ids"> </param>
         /// <param name="genres"> </param>
         /// <param name="types"> </param>
-        public static List<Track> Search(string term, string[] tags, Filter filter, string license, string order,
+        public static Task<List<Track>> Search(string term, string[] tags, Filter filter, string license, string order,
                                          int? bpmFrom, int? bpmTo, int? durationFrom, int? durationTo, DateTime from,
                                          DateTime to, int[] ids, string[] genres, string[] types, int offset = 0, int limit = 100)
         {
@@ -256,8 +258,8 @@ namespace SoundCloud.NET
             }
             if (from != null && to != null)
             {
-                filters.Add("created_at[from]", from.ToString("yyyy/MM/dd hh:mm:ss"));
-                filters.Add("created_at[to]", to.ToString("yyyy/MM/dd hh:mm:ss"));
+                filters.Add("created_at[from]", from.ToString("yyyy-MM-dd hh':'mm':'ss"));
+                filters.Add("created_at[to]", to.ToString("yyyy-MM-dd hh':'mm':'ss"));
             }
             if (ids != null && ids.Length > 0)
             {
@@ -337,7 +339,7 @@ namespace SoundCloud.NET
         /// Returns comments of a track by track id.
         /// </summary>
         /// <returns></returns>
-        public List<Comment> GetComments()
+        public Task<List<Comment>> GetComments()
         {
             return SoundCloudApi.ApiAction<List<Comment>>(ApiCommand.TrackComments, Id);
         }
@@ -346,7 +348,7 @@ namespace SoundCloud.NET
         /// Returns all users with permission for a track by track id.
         /// </summary>
         /// <returns></returns>
-        public List<User> GetPermissions()
+        public Task<List<User>> GetPermissions()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.TrackPermissions, Id);
         }
@@ -354,26 +356,26 @@ namespace SoundCloud.NET
         /// <summary>
         /// Adds the given track to the logged-in user's list of favorites.
         /// </summary>
-        public void AddToFavorites()
+        public Task AddToFavorites()
         {
-            SoundCloudApi.ApiAction<Track>(ApiCommand.MeFavoritesTrack, HttpMethod.Put, Id);
+            return SoundCloudApi.ApiAction<Track>(ApiCommand.MeFavoritesTrack, HttpMethod.Put, Id);
         }
 
         /// <summary>
         ///   Deletes the given track from the logged-in user's list of favorites.
         /// </summary>
-        public void RemoveFromFavorites()
+        public Task RemoveFromFavorites()
         {
-            SoundCloudApi.ApiAction<Track>(ApiCommand.MeFavoritesTrack, HttpMethod.Delete, Id);
+            return SoundCloudApi.ApiAction<Track>(ApiCommand.MeFavoritesTrack, HttpMethod.Delete, Id);
         }
 
         /// <summary>
         ///   Share a track to a social network.
         /// </summary>
         /// <param name="connection"> Registered social profile on sound cloud. </param>
-        public void Share(Connection connection)
+        public Task Share(Connection connection)
         {
-            Share(connection, null);
+            return Share(connection, null);
         }
 
         /// <summary>
@@ -381,13 +383,13 @@ namespace SoundCloud.NET
         /// </summary>
         /// <param name="connection"> Registered social profile on sound cloud. </param>
         /// <param name="sharingNote"> String that will be used as status message. This string might be truncated by SoundCloud. </param>
-        public void Share(Connection connection, string sharingNote)
+        public Task Share(Connection connection, string sharingNote)
         {
             var parameters = new Dictionary<string, object> { { "connections[][id]", connection.Id } };
 
             if (sharingNote != null) parameters.Add("sharing_note", sharingNote);
 
-            SoundCloudApi.ApiAction<Track>(ApiCommand.TrackShare, HttpMethod.Post, parameters, Id);
+            return SoundCloudApi.ApiAction<Track>(ApiCommand.TrackShare, HttpMethod.Post, parameters, Id);
         }
     }
 }

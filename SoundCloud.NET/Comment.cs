@@ -17,8 +17,8 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -93,7 +93,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="id">Comment id.</param>
-        public static Comment GetComment(int id)
+        public static Task<Comment> GetComment(int id)
         {
             return SoundCloudApi.ApiAction<Comment>(ApiCommand.Comment);
         }

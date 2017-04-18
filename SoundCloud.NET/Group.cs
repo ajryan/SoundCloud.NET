@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -73,7 +74,7 @@ namespace SoundCloud.NET
         /// Returns a combined collection of moderators, members and contributors of the group with group id.
         /// </summary>
         /// <returns></returns>
-        public List<User> GetUsers()
+        public Task<List<User>> GetUsers()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.GroupUsers, Id);
         }
@@ -82,7 +83,7 @@ namespace SoundCloud.NET
         /// Returns a collection of moderators of the group with group id.
         /// </summary>
         /// <returns></returns>
-        public List<User> GetModerators()
+        public Task<List<User>> GetModerators()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.GroupModerators, Id);
         }
@@ -91,7 +92,7 @@ namespace SoundCloud.NET
         /// Returns a collection of members of the group with group id.
         /// </summary>
         /// <returns></returns>
-        public List<User> GetMembers()
+        public Task<List<User>> GetMembers()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.GroupMembers, Id);
         }
@@ -100,7 +101,7 @@ namespace SoundCloud.NET
         /// Returns a collection of contributors of the group with group id.
         /// </summary>
         /// <returns></returns>
-        public List<User> GetContributors()
+        public Task<List<User>> GetContributors()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.GroupContributors, Id);
         }
@@ -109,7 +110,7 @@ namespace SoundCloud.NET
         /// Returns a collection of tracks contributed to the group with group id.
         /// </summary>
         /// <returns></returns>
-        public List<Track> GetTracks()
+        public Task<List<Track>> GetTracks()
         {
             return SoundCloudApi.ApiAction<List<Track>>(ApiCommand.GroupTracks, Id);
         }
@@ -121,7 +122,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of groups.
         /// </summary>
-        public static List<Group> GetAllGroups()
+        public static Task<List<Group>> GetAllGroups()
         {
             return SoundCloudApi.ApiAction<List<Group>>(ApiCommand.Groups);
         }
@@ -130,7 +131,7 @@ namespace SoundCloud.NET
         /// Returns a group by group id.
         /// </summary>
         /// <param name="id">Group id.</param>
-        public static Group GetGroup(int id)
+        public static Task<Group> GetGroup(int id)
         {
             return SoundCloudApi.ApiAction<Group>(ApiCommand.Group, id);
         }
@@ -140,7 +141,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="term">Term to search for.</param>
-        public static List<Group> Search(string term)
+        public static Task<List<Group>> Search(string term)
         {
             var parameters = new Dictionary<string, object> {{"q", term}};
 

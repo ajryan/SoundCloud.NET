@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -88,7 +89,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Retrieves connections for the authenticated user.
         /// </summary>
-        public static List<Connection> MyConnections()
+        public static Task<List<Connection>> MyConnections()
         {
             return SoundCloudApi.ApiAction<List<Connection>>(ApiCommand.MeConnections);
         }

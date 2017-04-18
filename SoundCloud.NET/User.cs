@@ -17,7 +17,9 @@
 */
 
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -108,7 +110,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of users the user with user id is following.
         /// </summary>
-        public List<User> GetFollowings()
+        public Task<List<User>> GetFollowings()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.UserFollowings, Id);
         }
@@ -118,9 +120,9 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="user">User to follow.</param>
-        public void AddFollowing(User user)
+        public Task AddFollowing(User user)
         {
-            AddFollowing(user.Id);
+            return AddFollowing(user.Id);
         }
 
         /// <summary>
@@ -128,9 +130,9 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="id">User id to follow.</param>
-        public void AddFollowing(int id)
+        public Task AddFollowing(int id)
         {
-            SoundCloudApi.ApiAction<User>(ApiCommand.UserFollowingsContact, HttpMethod.Put, Id, id);
+            return SoundCloudApi.ApiAction<User>(ApiCommand.UserFollowingsContact, HttpMethod.Put, Id, id);
         }
 
         /// <summary>
@@ -138,9 +140,9 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="user">User to remove.</param>
-        public void RemoveFollowing(User user)
+        public Task RemoveFollowing(User user)
         {
-            RemoveFollowing(user.Id);
+            return RemoveFollowing(user.Id);
         }
 
         /// <summary>
@@ -148,15 +150,15 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="id">User id to remove.</param>
-        public void RemoveFollowing(int id)
+        public Task RemoveFollowing(int id)
         {
-            SoundCloudApi.ApiAction<User>(ApiCommand.UserFollowingsContact, HttpMethod.Delete, Id, id);
+            return SoundCloudApi.ApiAction<User>(ApiCommand.UserFollowingsContact, HttpMethod.Delete, Id, id);
         }
 
         /// <summary>
         /// Returns a collection of users who follow the user with user id
         /// </summary>
-        public List<User> GetFollowers()
+        public Task<List<User>> GetFollowers()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.UserFollowers, Id);
         }
@@ -164,7 +166,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of tracks uploaded by user id.
         /// </summary>
-        public List<Track> GetTracks()
+        public Task<List<Track>> GetTracks()
         {
             return SoundCloudApi.ApiAction<List<Track>>(ApiCommand.UserTracks, Id);
         }
@@ -172,7 +174,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of tracks favorited by the user with user id.
         /// </summary>
-        public List<Track> GetFavorites()
+        public Task<List<Track>> GetFavorites()
         {
             return SoundCloudApi.ApiAction<List<Track>>(ApiCommand.UserFavorites, Id);
         }
@@ -180,7 +182,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of groups joined by user with user id.
         /// </summary>
-        public List<Group> GetGroups()
+        public Task<List<Group>> GetGroups()
         {
             return SoundCloudApi.ApiAction<List<Group>>(ApiCommand.UserGroups, Id);
         }
@@ -188,7 +190,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of playlists created by user with user id
         /// </summary>
-        public List<Playlist> GetPlaylists(int id)
+        public Task<List<Playlist>> GetPlaylists(int id)
         {
             return SoundCloudApi.ApiAction<List<Playlist>>(ApiCommand.UserPlaylists, Id);
         }
@@ -200,7 +202,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of users.
         /// </summary>
-        public static List<User> GetAllUsers()
+        public static Task<List<User>> GetAllUsers()
         {
             return SoundCloudApi.ApiAction<List<User>>(ApiCommand.Users);
         }
@@ -210,7 +212,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="count">Users count.</param>
-        public static List<User> GetUsers(int count)
+        public static Task<List<User>> GetUsers(int count)
         {
             var parameters = new Dictionary<string, object>();
 
@@ -224,7 +226,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="id">User id.</param>
-        public static User GetUser(int id)
+        public static Task<User> GetUser(int id)
         {
             return SoundCloudApi.ApiAction<User>(ApiCommand.User, id);
         }
@@ -232,7 +234,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns the logged-in user.
         /// </summary>
-        public static User Me()
+        public static Task<User> Me()
         {
             return SoundCloudApi.ApiAction<User>(ApiCommand.Me);
         }
@@ -242,7 +244,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="term">a term to search for.</param>
-        public static List<User> Search(string term)
+        public static Task<List<User>> Search(string term)
         {
             var parameters = new Dictionary<string, object> { { "q", term } };
 

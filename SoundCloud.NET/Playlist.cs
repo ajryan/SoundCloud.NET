@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SoundCloud.NET
 {
@@ -134,7 +135,7 @@ namespace SoundCloud.NET
         /// <summary>
         /// Returns a collection of playlists.
         /// </summary>
-        public static List<Playlist> GetAllPlaylists()
+        public static Task<List<Playlist>> GetAllPlaylists()
         {
             return SoundCloudApi.ApiAction<List<Playlist>>(ApiCommand.Playlists);
         }
@@ -144,7 +145,7 @@ namespace SoundCloud.NET
         /// </summary>
         /// 
         /// <param name="id">Playlist id.</param>
-        public static Playlist GetPlaylist(int id)
+        public static Task<Playlist> GetPlaylist(int id)
         {
             return SoundCloudApi.ApiAction<Playlist>(ApiCommand.Playlist, id);
         }
